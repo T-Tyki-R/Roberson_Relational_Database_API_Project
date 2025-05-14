@@ -9,7 +9,11 @@ from typing import List, Optional
 import os
 
 # ______ Initialize Flask App ______ 
+app = Flask(__name__)
 
+# ______ Initialize Database ______
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:Saiouma2018@localhost/ecommerce_api'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # ______ Initialize Table(s) ______ 
 # Create a table for each of the following:
@@ -18,6 +22,41 @@ import os
 # 3. Orders
 # 4. Order Product Association
 
+class Base(DeclarativeBase):
+    pass
+
+class User(Base):
+    __tablename__ = 'users' # Create a table namd 'users'
+    # Define the columns in the table
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(50), nullable=False)
+    email: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    password: Mapped[str] = mapped_column(String(50), nullable=False)
+    orders: Mapped[List['Order']] = relationship('Order', back_populates='user')
+
+class Product(Base):
+    __tablename__ = 'products'# Create a table named 'products'
+    # Define the columns in the table
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(50), nullable=False)
+    description: Mapped[str] = mapped_column(String(200), nullable=False)
+    price: Mapped[float] = mapped_column(Integer, nullable=False)
+    orders: Mapped[List['Order']] = relationship('Order', secondary='order_product', back_populates='products')
+
+class Order(Base):
+    __tablename__ = 'orders' #Create a table named 'orders'
+    # Define the columns in the table
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    user: Mapped[User] = relationship('User', back_populates='orders')
+    products: Mapped[List[Product]] = relationship('Product', secondary='order_product', back_populates='orders')
+
+# Create an association table for the many-to-many relationship between orders and products
+# The table will have two foreign keys: order_id and product_id
+order_product = Table('order_product', Base.metadata,
+    Column('order_id', Integer, ForeignKey('orders.id'), primary_key=True),
+    Column('product_id', Integer, ForeignKey('products.id'), primary_key=True)
+)
 
 # ______ Initialize Route(s) ______
 # Create a route for each of the following:
