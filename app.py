@@ -11,6 +11,7 @@ import os
 # ______ Initialize Flask App ______ 
 app = Flask(__name__)
 
+
 # ______ Initialize Database ______
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:Saiouma2018@localhost/ecommerce_api'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -24,6 +25,11 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 class Base(DeclarativeBase):
     pass
+
+#_________ Initialize SQLAclchemy & Marshmallow __________
+db = SQLAlchemy(model_class= Base)
+db.init_app(app)
+ma = Marshmallow(app)
 
 class User(Base):
     __tablename__ = 'users' # Create a table namd 'users'
@@ -67,6 +73,7 @@ order_product = Table('order_product', Base.metadata,
 # 4. PUT/users/<user_id>
 # 5. DELETE/users/<user_id>
 
+def 
 
 # Product Endpoints
 # 1. GET/products
