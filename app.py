@@ -291,4 +291,12 @@ def remove_product_from_order(order_id, product_id):
         else:
             return jsonify({"message": "Product not in order"}), 400
     else:
-        return jsonify({"message": "Order or Product not found"}), 404    
+        return jsonify({"message": "Order or Product not found"}), 404 
+
+# ______ Run the App ______
+if __name__ == "__main__":
+    with app.app_context():
+        # Create the database and tables
+        db.create_all()
+        app.run(debug=True) 
+    app.run(debug=True)  
