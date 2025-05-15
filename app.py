@@ -228,4 +228,67 @@ def delete_product(product_id):
 # 4. PUT /orders/<order_id>/add_product/<product_id>: Add a product to an order (prevent duplicates)
 # 5. DELETE/orders/<order_id>/remove_product: Remove a product from an order
 
+@app.route("/order/user/<user_id>", methods=["GET"])
+def get_orders_by_user(user_id):
+    orders = Order.query.filter_by(user_id=user_id).all()
+    if orders:
+        return orders_schema.jsonify(orders)
+    else:
+        return jsonify({"message": "No orders found for this user"}), 404
+   
 
+@app.route("/order/<int:order_id>/products", methods=["GET"])
+def get_products_by_order(order_id):
+    order = Order.query.get(order_id)
+    if order:
+        products = order.products
+        return products_schema.jsonify(products)
+    else:
+        return jsonify({"message": "Order not found"}), 404
+    
+@app.route("/order", methods=["POST"])
+def create_order():
+    try:
+        user_id = request.json["user_id"]
+        product_ids = request.json.get("product_ids", [])
+        new_order = Order(user_id=user_id)
+        db.session.add(new_order)    
+        db.session.commit()
+        
+        for product_id in product_ids:
+            product = Product.query.get(product_id)
+            if product:
+                new_order.products.append(product)
+        
+        db.session.commit()
+        return order_schema.jsonify(new_order), 201
+    except ValidationError as err:
+        return jsonify(err.messages), 400
+
+@app.route("/order/<int:order_id>/add_product/<product_id>", methods=["PUT"])
+def add_product_to_order(order_id, product_id):
+    order = Order.query.get(order_id)
+    product = Product.query.get(product_id)
+    if order and product:
+        if product not in order.products:
+            order.products.append(product)
+            db.session.commit()
+            return order_schema.jsonify(order)
+        else:
+            return jsonify({"message": "Product already in order"}), 400
+    else:
+        return jsonify({"message": "Order or Product not found"}), 404
+
+@app.route("/order/<int:order_id>/remove_product/<product_id>", methods=["DELETE"])
+def remove_product_from_order(order_id, product_id):
+    order = Order.query.get(order_id)
+    product = Product.query.get(product_id)
+    if order and product:
+        if product in order.products:
+            order.products.remove(product)
+            db.session.commit()
+            return order_schema.jsonify(order)
+        else:
+            return jsonify({"message": "Product not in order"}), 400
+    else:
+        return jsonify({"message": "Order or Product not found"}), 404    
