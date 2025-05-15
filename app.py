@@ -16,13 +16,6 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:Saiouma2018@localhost/ecommerce_api'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# ______ Initialize Table(s) ______ 
-# Create a table for each of the following:
-# 1. Users
-# 2. Products
-# 3. Orders
-# 4. Order Product Association
-
 class Base(DeclarativeBase):
     pass
 
@@ -30,6 +23,15 @@ class Base(DeclarativeBase):
 db = SQLAlchemy(model_class= Base)
 db.init_app(app)
 ma = Marshmallow(app)
+
+# ______ Initialize Table(s) ______ 
+# Create a table for each of the following:
+# 1. Users
+# 2. Products
+# 3. Orders
+# 4. Order Product Association
+
+# Models
 
 class User(Base):
     __tablename__ = 'users' # Create a table namd 'users'
@@ -64,6 +66,30 @@ order_product = Table('order_product', Base.metadata,
     Column('product_id', Integer, ForeignKey('products.id'), primary_key=True)
 )
 
+# ______ Initialize Schema(s) ______ 
+class UserSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = User
+
+class ProductSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Product
+
+class OrderSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Order
+
+class OrderProductSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = order_product
+
+user_schema = UserSchema()
+users_schema = UserSchema(many=True)
+product_schema = ProductSchema()
+products_schema = ProductSchema(many=True)
+order_schema = OrderSchema()
+orders_schema = OrderSchema(many=True)
+
 # ______ Initialize Route(s) ______
 # Create a route for each of the following:
 # User Endpoints
@@ -73,7 +99,64 @@ order_product = Table('order_product', Base.metadata,
 # 4. PUT/users/<user_id>
 # 5. DELETE/users/<user_id>
 
-def 
+@app.route("/users", methods=["GET"])
+def get_users():
+    users = User.query.all()
+    return users_schema.jsonify(users)
+
+@app.route("/users/<int:user_id>", methods=["GET"])
+def get_user(user_id):
+    user = User.query.get(user_id)
+    if user:
+        return user_schema.jsonify(user)
+    else:
+        return jsonify({"message": "User not found"}), 404
+    
+@app.route("/users", methods=["POST"])
+def create_user():
+    try:
+        name = request.json["name"]
+        email = request.json["email"]
+        password = request.json["password"]
+        new_user = User(name=name, email=email, password=password)
+        db.session.add(new_user)    
+        db.session.commit()
+        return user_schema.jsonify(new_user), 201
+    except ValidationError as err:
+        return jsonify(err.messages), 400
+
+@app.route("/users/<int:user_id>", methods=["PUT"])
+def update_user(user_id):
+    user= User.query.get(user_id)
+    if user:
+        try:
+            name = request.json["name"]
+            email = request.json["email"]
+            password = request.json["password"]
+            user.name = name
+            user.email = email
+            user.password = password
+            db.session.commit()
+            return user_schema.jsonify(user)
+        except ValidationError as err:
+            return jsonify(err.messages), 400
+    else:
+        return jsonify({"message": "User not found"}), 404
+
+@app.route("/users/<int:user_id>", methods=["DELETE"])
+def delete_user(user_id):
+    user= User.query.get(user_id)
+    if user:
+        try:
+            db.session.delete(user)
+            db.session.commit()
+            return user_schema.jsonify(user)
+        except ValidationError as err:
+            return jsonify(err.messages), 400
+    else:
+        return jsonify({"message": "User not found"}), 404
+
+
 
 # Product Endpoints
 # 1. GET/products
