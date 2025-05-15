@@ -156,14 +156,69 @@ def delete_user(user_id):
     else:
         return jsonify({"message": "User not found"}), 404
 
-
-
 # Product Endpoints
 # 1. GET/products
 # 2. GET/products/<product_id>
 # 3. POST/products
 # 4. PUT/products/<product_id>
 # 5. DELETE/products/<product_id>
+
+@app.route("/product", methods=["GET"])
+def get_products():
+    products = Product.query.all()
+    return products_schema.jsonify(products)
+
+@app.route("/product/<int:product_id>", methods=["GET"])
+def get_product(product_id):
+    product = Product.query.get(product_id)
+    if product:
+        return product_schema.jsonify(product)
+    else:
+        return jsonify({"message": "product not found"}), 404
+    
+@app.route("/product", methods=["POST"])
+def create_product():
+    try:
+        name = request.json["name"]
+        description = request.json["description"]
+        price = request.json["price"]
+        new_product = Product(name=name, description=description, price=price)
+        db.session.add(new_product)    
+        db.session.commit()
+        return product_schema.jsonify(new_product), 201
+    except ValidationError as err:
+        return jsonify(err.messages), 400
+
+@app.route("/product/<int:product_id>", methods=["PUT"])
+def update_product(product_id):
+    product = Product.query.get(product_id)
+    if product:
+        try:
+            name = request.json["name"]
+            description = request.json["description"]
+            price = request.json["price"]
+            product.name = name
+            product.description = description
+            product.price = price
+            db.session.commit()
+            return product_schema.jsonify(product)
+        except ValidationError as err:
+            return jsonify(err.messages), 400
+    else:
+        return jsonify({"message": "product not found"}), 404
+
+@app.route("/product/<int:product_id>", methods=["DELETE"])
+def delete_product(product_id):
+    product= Product.query.get(product_id)
+    if product:
+        try:
+            db.session.delete(product)
+            db.session.commit()
+            return product_schema.jsonify(product)
+        except ValidationError as err:
+            return jsonify(err.messages), 400
+    else:
+        return jsonify({"message": "product not found"}), 404
 
 
 # Order Endpoints
