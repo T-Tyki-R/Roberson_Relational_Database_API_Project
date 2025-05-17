@@ -79,9 +79,6 @@ class OrderSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Order
 
-class OrderProductSchema(ma.SQLAlchemyAutoSchema):
-    class Meta:
-        model = order_product
 
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
@@ -101,7 +98,7 @@ orders_schema = OrderSchema(many=True)
 
 @app.route("/users", methods=["GET"])
 def get_users():
-    users = User.query.all()
+    users = db.session.query(User).all()
     return users_schema.jsonify(users)
 
 @app.route("/users/<int:user_id>", methods=["GET"])
@@ -127,7 +124,7 @@ def create_user():
 
 @app.route("/users/<int:user_id>", methods=["PUT"])
 def update_user(user_id):
-    user= User.query.get(user_id)
+    user= db.session.get(User, user_id)
     if user:
         try:
             name = request.json["name"]
@@ -145,7 +142,7 @@ def update_user(user_id):
 
 @app.route("/users/<int:user_id>", methods=["DELETE"])
 def delete_user(user_id):
-    user= User.query.get(user_id)
+    user= db.session.get(User, user_id)
     if user:
         try:
             db.session.delete(user)
