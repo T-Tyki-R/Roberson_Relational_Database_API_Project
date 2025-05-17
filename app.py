@@ -103,7 +103,7 @@ def get_users():
 
 @app.route("/users/<int:user_id>", methods=["GET"])
 def get_user(user_id):
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if user:
         return user_schema.jsonify(user)
     else:
@@ -162,12 +162,12 @@ def delete_user(user_id):
 
 @app.route("/product", methods=["GET"])
 def get_products():
-    products = Product.query.all()
+    products = db.session.query(Product).all()
     return products_schema.jsonify(products)
 
 @app.route("/product/<int:product_id>", methods=["GET"])
 def get_product(product_id):
-    product = Product.query.get(product_id)
+    product =  db.session.get(Product, product_id)
     if product:
         return product_schema.jsonify(product)
     else:
@@ -188,7 +188,7 @@ def create_product():
 
 @app.route("/product/<int:product_id>", methods=["PUT"])
 def update_product(product_id):
-    product = Product.query.get(product_id)
+    product = db.session.get(Product, product_id)
     if product:
         try:
             name = request.json["name"]
@@ -206,7 +206,7 @@ def update_product(product_id):
 
 @app.route("/product/<int:product_id>", methods=["DELETE"])
 def delete_product(product_id):
-    product= Product.query.get(product_id)
+    product= db.session.get(Product, product_id)
     if product:
         try:
             db.session.delete(product)
