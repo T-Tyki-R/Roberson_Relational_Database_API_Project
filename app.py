@@ -227,7 +227,7 @@ def delete_product(product_id):
 
 @app.route("/order/user/<user_id>", methods=["GET"])
 def get_orders_by_user(user_id):
-    orders = Order.query.filter_by(user_id=user_id).all()
+    orders = db.session.filter_by(User, user_id).all()
     if orders:
         return orders_schema.jsonify(orders)
     else:
@@ -236,7 +236,7 @@ def get_orders_by_user(user_id):
 
 @app.route("/order/<int:order_id>/products", methods=["GET"])
 def get_products_by_order(order_id):
-    order = Order.query.get(order_id)
+    order = db.session.get(Order, order_id)
     if order:
         products = order.products
         return products_schema.jsonify(products)
@@ -253,7 +253,7 @@ def create_order():
         db.session.commit()
         
         for product_id in product_ids:
-            product = Product.query.get(product_id)
+            product = db.session.get(Product, product_id)
             if product:
                 new_order.products.append(product)
         
@@ -264,8 +264,8 @@ def create_order():
 
 @app.route("/order/<int:order_id>/add_product/<product_id>", methods=["PUT"])
 def add_product_to_order(order_id, product_id):
-    order = Order.query.get(order_id)
-    product = Product.query.get(product_id)
+    order = db.session.get(Order, order_id)
+    product = db.session.get(Product, product_id)
     if order and product:
         if product not in order.products:
             order.products.append(product)
@@ -278,8 +278,8 @@ def add_product_to_order(order_id, product_id):
 
 @app.route("/order/<int:order_id>/remove_product/<product_id>", methods=["DELETE"])
 def remove_product_from_order(order_id, product_id):
-    order = Order.query.get(order_id)
-    product = Product.query.get(product_id)
+    order = db.session.get(Order, order_id)
+    product = db.session.get(Product, product_id)
     if order and product:
         if product in order.products:
             order.products.remove(product)
