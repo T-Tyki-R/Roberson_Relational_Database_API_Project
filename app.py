@@ -227,7 +227,7 @@ def delete_product(product_id):
 
 @app.route("/order/user/<user_id>", methods=["GET"])
 def get_orders_by_user(user_id):
-    orders = db.session.filter_by(User, user_id).all()
+    orders = db.session.query(Order).filter_by(user_id = user_id).all()
     if orders:
         return orders_schema.jsonify(orders)
     else:
